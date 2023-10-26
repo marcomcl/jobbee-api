@@ -2,9 +2,14 @@ const express = require('express');
 const app = express();
 
 const fileUpload = require('express-fileupload');
-
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const xssClean = require('xss-clean');
+const hpp = require('hpp');
+const cors = require('cors');
 
 const databaseConnection = require('./config/database');
 const errorMiddleware = require('./middlewares/errors');
@@ -24,6 +29,9 @@ process.on('uncaughtException', err => {
 // Connecting to the database
 databaseConnection();
 
+// Setup security headers
+app.use(helmet());
+
 // Setup body parser
 app.use(express.json());
 
@@ -32,6 +40,26 @@ app.use(cookieParser());
 
 // Setup file uploader
 app.use(fileUpload());
+
+// Setup mongo sanitizer
+app.use(mongoSanitize());
+
+// Setup XSS cleaner
+app.use(xssClean());
+
+// Prevent Parameter Pollution
+app.use(hpp());
+
+// Setup CORS
+app.use(cors());
+
+// Setup rate limiter
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 100
+})
+
+app.use(limiter);
 
 // Retrieving the port number from env
 const PORT = process.env.PORT;
