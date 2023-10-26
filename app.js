@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 
+const fileUpload = require('express-fileupload');
+
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 
@@ -28,15 +30,20 @@ app.use(express.json());
 // Setup cookier parser
 app.use(cookieParser());
 
+// Setup file uploader
+app.use(fileUpload());
+
 // Retrieving the port number from env
 const PORT = process.env.PORT;
 
 // Setting all routes
 const jobs = require('./routes/jobs');
 const auth = require('./routes/auth');
+const users = require('./routes/users');
 
 app.use('/api/v1', jobs);
 app.use('/api/v1', auth);
+app.use('/api/v1', users);
 
 // Handling non existent routes
 app.all('*', (req, res, next) => {
