@@ -105,7 +105,7 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     }
 
     deleteUserData(user.id, user.role);
-    user.remove();
+    await user.remove();
 
     res.status(200).json({
         success: true,
@@ -139,8 +139,8 @@ async function deleteUserData(user, role) {
     if (role === 'user') {
         const jobsApplied = await Job.find({ 'candidates.id': user }).select('+candidates');
 
-        jobsApplied.forEach(job => {
-            let obj = job.candidates.find(o => o.id === user);
+        for (let i = 0; i < jobsApplied.length; i++) {
+            let obj = jobsApplied[i].candidates.find(o => o.id === user);
             let filePath = `${__dirname}/public/uploads/${obj.resume}`.replace('\\controllers', '');
 
             fs.unlink(filePath, err => {
@@ -149,8 +149,8 @@ async function deleteUserData(user, role) {
                 }
             });
 
-            job.candidates.splice(job.candidates.indexOf(obj.id));
-            job.save();
-        });
+            jobsApplied[i].candidates.splice(job.candidates.indexOf(obj.id));
+            await jobsApplied[i].save();
+        }
     }
 }
